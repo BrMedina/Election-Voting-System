@@ -1,0 +1,36 @@
+:root {
+    --brand: #b52232;
+    --ink: #393939;
+    --paper: #f6f5f3;
+}
+
+body {
+    background: var(--paper);
+    color: var(--ink);
+}
+
+.brand-card {
+    border: 1px solid rgba(57, 57, 57, 0.15);
+    border-radius: 14px;
+    box-shadow: 0 16px 30px rgba(57, 57, 57, 0.08);
+}
+
+.brand-btn {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
+.brand-btn:hover,
+.brand-btn:focus {
+    background: #a11f2d;
+    border-color: #a11f2d;
+}
+
+.form-control:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 0.2rem rgba(181, 34, 50, 0.2);
+}
+
+.form-label {
+    font-weight: 600;
+}
