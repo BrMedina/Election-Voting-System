@@ -29,7 +29,7 @@
 								<label class="form-label" for="password">Password</label>
 								<input class="form-control" type="password" id="password" name="password" placeholder="Enter your password" required>
 							</div>
-							<button type="submit" class="btn brand-btn text-white w-100 mt-2">Login</button>
+                            <button type="submit" name="sub" class="btn brand-btn text-white w-100 mt-2">Login</button>
 						</form>
 
 						<div class="text-center mt-4">
@@ -43,3 +43,77 @@
 	</div>
 </body>
 </html>
+
+
+<?php
+
+require_once 'dbelection.php';
+session_start();
+
+
+// button func
+if(isset($_POST['sub'])) {
+    //user input
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+
+    $loginsql = "Select * from tbl_users where username = '" . $username ."' and password = '". $password ."'";
+
+    $result = $conn->query($loginsql);
+
+    //check if there is a match record
+    if ($result->num_rows == 1) {
+        $fieldname = $result -> fetch_assoc();
+
+        $fullname = $fieldname['full_name'];
+        $usertype = $fieldname['role'];
+        $id = $fieldname['user_id'];
+
+        //session variable
+        $_SESSION['user_type'] = $usertype;
+        $_SESSION['fullname'] = $fullname;
+        $_SESSION['id'] = $id;
+
+        //to check the usertype
+        echo $usertype;
+
+        if ($usertype == "Voter" || $usertype == "Voters") {
+            ?>
+            <script>
+                window.location.href = "index.php";
+            </script>
+            <?php
+        }
+        else if($usertype == "Organizer"){
+            ?>
+            <script>
+                window.location.href = "index.php";
+            </script>
+            <?php
+        }
+        else if ($usertype == "Admin") {
+            ?>
+            <script>
+                window.location.href = "admin.php";
+            </script>
+            <?php
+        };
+    } else {
+    ?> 
+        <script>
+            Swal.fire({
+            position: "center",
+            icon: "error",
+            title: "Invalid Account",
+            showConfirmButton: false,
+            timer: 1500
+            });
+        </script>
+    <?php
+    };
+    
+
+}
+
+
+?>
