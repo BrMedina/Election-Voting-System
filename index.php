@@ -89,6 +89,11 @@ if ($result) {
 					<h2 class="h4 mb-1">Candidate Information</h2>
 					<p class="text-muted mb-0">List of registered candidates.</p>
 				</div>
+				<div class="btn-group" role="group" aria-label="Candidate views">
+					<button type="button" class="btn btn-outline-secondary candidate-filter" data-target="runner-list">Candidates / Runners</button>
+					<button type="button" class="btn btn-outline-secondary candidate-filter" data-target="party-list">Party Lists</button>
+					<button type="button" class="btn btn-outline-secondary candidate-filter active" data-target="candidate-table" aria-pressed="true">Candidate Information</button>
+				</div>
 			</div>
 
 			<?php if ($dbError): ?>
@@ -100,32 +105,81 @@ if ($result) {
 					No candidates found.
 				</div>
 			<?php else: ?>
-				<div class="table-responsive">
-					<table class="table table-bordered align-middle">
-						<thead class="table-light">
-							<tr>
-								<th scope="col">ID</th>
-								<th scope="col">Name</th>
-								<th scope="col">Party</th>
-								<th scope="col">Position</th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php foreach ($candidates as $candidate): ?>
-								<tr>
-									<td><?php echo htmlspecialchars($candidate['candidate_id']); ?></td>
-									<td><?php echo htmlspecialchars($candidate['candidate_name']); ?></td>
-									<td><?php echo htmlspecialchars($candidate['party_affiliation']); ?></td>
-									<td><?php echo htmlspecialchars($candidate['election_position']); ?></td>
-								</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
+				<div id="runner-list" class="candidate-view d-none">
+					<div class="row g-3">
+						<?php foreach ($candidates as $candidate): ?>
+							<div class="col-sm-6 col-lg-4 col-xl-3">
+								<div class="p-3 border rounded-4 h-100 bg-light-subtle">
+									<h3 class="h6 mb-1"><?php echo htmlspecialchars($candidate['candidate_name']); ?></h3>
+									<p class="text-muted small mb-0">Runner</p>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+
+				<div id="party-list" class="candidate-view d-none">
+					<div class="row g-3">
+						<?php
+						$partyGroups = [];
+						foreach ($candidates as $candidate) {
+							$party = trim($candidate['party_affiliation'] ?? '');
+							if ($party !== '') {
+								$partyGroups[$party] = true;
+							}
+						}
+						foreach (array_keys($partyGroups) as $partyName):
+						?>
+							<div class="col-sm-6 col-lg-4 col-xl-3">
+								<div class="p-3 border rounded-4 h-100 bg-light-subtle">
+									<h3 class="h6 mb-1"><?php echo htmlspecialchars($partyName); ?></h3>
+									<p class="text-muted small mb-0">Party list</p>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				</div>
+
+				<div id="candidate-table" class="candidate-view">
+					<div class="row g-3">
+						<?php foreach ($candidates as $candidate): ?>
+							<div class="col-sm-6 col-lg-4 col-xl-3">
+								<div class="p-3 border rounded-4 h-100 bg-light-subtle">
+									<h3 class="h6 mb-1"><?php echo htmlspecialchars($candidate['candidate_name']); ?></h3>
+									<p class="text-muted small mb-2">Candidate profile</p>
+									<div class="small">
+										<div><span class="fw-semibold">ID:</span> <?php echo htmlspecialchars($candidate['candidate_id']); ?></div>
+										<div><span class="fw-semibold">Party:</span> <?php echo htmlspecialchars($candidate['party_affiliation']); ?></div>
+										<div><span class="fw-semibold">Position:</span> <?php echo htmlspecialchars($candidate['election_position']); ?></div>
+									</div>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
 				</div>
 			<?php endif; ?>
 		</div>
 	</section>
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<script>
+		const filterButtons = document.querySelectorAll('.candidate-filter');
+		const candidateViews = document.querySelectorAll('.candidate-view');
+
+		const showCandidateView = (targetId) => {
+			candidateViews.forEach((view) => {
+				view.classList.toggle('d-none', view.id !== targetId);
+			});
+			filterButtons.forEach((button) => {
+				const isActive = button.dataset.target === targetId;
+				button.classList.toggle('active', isActive);
+				button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+			});
+		};
+
+		filterButtons.forEach((button) => {
+			button.addEventListener('click', () => showCandidateView(button.dataset.target));
+		});
+	</script>
 </body>
 </html>
