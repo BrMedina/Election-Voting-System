@@ -148,10 +148,10 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     /* Layout */
     .topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-height); background-color: #ffffff; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; padding: 0 1.5rem; z-index: 1030; }
     .topbar-brand { font-size: 1.1rem; font-weight: 700; color: #212529; text-decoration: none; }
-    .topbar-brand span { color: #0d6efd; }
+    .topbar-brand span { color: #b52232; }
     .sidebar-toggle { background: none; border: none; cursor: pointer; color: #212529; font-size: 1.4rem; margin-right: 1rem; padding: 4px 8px; border-radius: 4px; }
     .sidebar-toggle:hover { background-color: #e9ecef; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #0d6efd; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #b52232; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
     
     .sidebar { position: fixed; top: var(--topbar-height); left: 0; bottom: 0; width: var(--sidebar-width); background-color: #212529; z-index: 1020; overflow-y: auto; transition: transform 0.2s ease-in-out; display: flex; flex-direction: column; }
     .sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-width))); }
@@ -159,15 +159,15 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     .sidebar-nav { list-style: none; padding: 0 0.75rem; margin: 0; }
     .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; color: #adb5bd; text-decoration: none; border-radius: 4px; font-size: 0.88rem; transition: background-color 0.15s, color 0.15s; }
     .sidebar-link:hover { background-color: #2c3034; color: #ffffff; }
-    .sidebar-link.active { background-color: #0d6efd; color: #ffffff !important; }
+    .sidebar-link.active { background-color: #b52232; color: #ffffff !important; }
     
     .layout-main { margin-top: var(--topbar-height); margin-left: var(--sidebar-width); min-height: calc(100vh - var(--topbar-height)); padding: 2rem; transition: margin-left 0.2s ease-in-out; }
     .layout-main.expanded { margin-left: 0; }
     
     /* Candidate card */
     .cand-card { border: 2px solid #dee2e6; border-radius: 6px; padding: 1rem 1.25rem; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; gap: 1rem; margin-bottom: 0.65rem; background-color: #ffffff; }
-    .cand-card:hover { border-color: #0d6efd; background-color: #f8f9fa; }
-    .cand-card.selected { border-color: #0d6efd; background-color: #e9ecef; }
+    .cand-card:hover { border-color: #b52232; background-color: #f8f9fa; }
+    .cand-card.selected { border-color: #b52232; background-color: #e9ecef; }
     .cand-card.voted-done { border-color: #198754; background-color: #f8f9fa; cursor: default; }
     .cand-avatar { width: 40px; height: 40px; border-radius: 50%; background-color: #6c757d; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
     .cand-name { font-weight: 600; font-size: 0.9rem; color: #212529; }
@@ -179,7 +179,8 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     
     /* Results */
     .result-bar-wrap { background: #e9ecef; border-radius: 4px; height: 12px; overflow: hidden; flex: 1; }
-    .result-bar { background: #0d6efd; height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    .result-bar { background: #b52232; height: 100%; border-radius: 4px; transition: width 0.8s ease; }
+    
     .result-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem; }
     .result-name { min-width: 160px; font-size: 0.88rem; font-weight: 500; }
     .result-count { min-width: 40px; text-align: right; font-size: 0.82rem; color: #6c757d; }
@@ -250,7 +251,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     <?php else: foreach($candidatesByPos as $pos => $cands): ?>
       <div class="card border-light shadow-sm mb-3">
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3"><i class="bi bi-award-fill text-primary me-2"></i><?= htmlspecialchars($pos) ?></h5>
+          <h5 class="fw-bold mb-3"><i class="bi bi-award-fill text-danger me-2"></i><?= htmlspecialchars($pos) ?></h5>
           <div class="row g-3">
             <?php foreach($cands as $c): 
               $init = strtoupper(substr($c['candidate_name'],0,1));
@@ -278,7 +279,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
       </div>
     <?php endforeach; endif; ?>
     <div class="text-center mt-3">
-      <a href="voter_dashboard.php?section=voteSection" class="btn btn-primary btn-lg px-4"><i class="bi bi-check-square me-2"></i>Proceed to Vote</a>
+      <a href="voter_dashboard.php?section=voteSection" class="btn btn-danger btn-lg px-4"><i class="bi bi-check-square me-2"></i>Proceed to Vote</a>
     </div>
   </div>
 
@@ -300,7 +301,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
       ?>
       <div class="pos-section <?= $alreadyVoted ? 'border-success' : '' ?>">
         <div class="pos-title">
-          <i class="bi bi-award-fill text-primary"></i>
+          <i class="bi bi-award-fill text-danger"></i>
           <?= htmlspecialchars($pos) ?>
           <?php if($alreadyVoted): ?>
             <span class="badge bg-success ms-auto"><i class="bi bi-check-circle me-1"></i>Voted: <?= htmlspecialchars($myChoice ?? '') ?></span>
@@ -336,7 +337,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
 
       <?php if(!$alreadyVotedAll): ?>
       <div class="text-center mt-3">
-        <button type="button" class="btn btn-primary btn-lg px-5" onclick="confirmVote()">
+        <button type="button" class="btn btn-danger btn-lg px-5" onclick="confirmVote()">
           <i class="bi bi-check-circle me-2"></i>Submit My Votes
         </button>
       </div>
@@ -356,7 +357,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     <div class="card border-light shadow-sm">
       <div class="card-body p-4">
         <div class="mb-4">
-          <h5 class="fw-bold mb-1"><i class="bi bi-card-checklist me-2 text-primary"></i>My Vote Summary</h5>
+          <h5 class="fw-bold mb-1"><i class="bi bi-card-checklist me-2 text-danger"></i>My Vote Summary</h5>
           <p class="text-muted small mb-0">A record of all votes you have cast.</p>
         </div>
         <?php if($myVotesRes && $myVotesRes->num_rows > 0): ?>
@@ -368,7 +369,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
             <?php if ($img): ?>
               <img src="<?= htmlspecialchars($img) ?>" class="cand-avatar" style="object-fit: cover;" alt="">
             <?php else: ?>
-              <div class="cand-avatar bg-primary text-white"><?= $init ?></div>
+              <div class="cand-avatar bg-danger text-white"><?= $init ?></div>
             <?php endif; ?>
             <div style="flex:1;">
               <div style="font-weight:600; font-size:0.92rem;"><?= htmlspecialchars($mv['candidate_name']) ?></div>
@@ -384,13 +385,13 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
           </div>
           <?php endforeach; ?>
           <div class="text-center mt-4">
-            <a href="voter_dashboard.php?section=resultsSection" class="btn btn-outline-primary"><i class="bi bi-bar-chart me-1"></i>View Overall Results</a>
+            <a href="voter_dashboard.php?section=resultsSection" class="btn btn-outline-danger"><i class="bi bi-bar-chart me-1"></i>View Overall Results</a>
           </div>
         <?php else: ?>
           <div class="text-center py-5">
             <i class="bi bi-inbox display-4 text-muted d-block mb-3"></i>
             <p class="text-muted">You haven't voted yet.</p>
-            <a href="voter_dashboard.php?section=voteSection" class="btn btn-primary"><i class="bi bi-check-square me-1"></i>Cast Your Vote</a>
+            <a href="voter_dashboard.php?section=voteSection" class="btn btn-danger"><i class="bi bi-check-square me-1"></i>Cast Your Vote</a>
           </div>
         <?php endif; ?>
       </div>
@@ -400,7 +401,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
   <!-- OVERALL RESULTS -->
   <div id="resultsSection" <?= $activeSection!=='resultsSection'?'style="display:none"':'' ?>>
     <div class="mb-3">
-      <h1 class="h4 fw-bold"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Overall Results</h1>
+      <h1 class="h4 fw-bold"><i class="bi bi-bar-chart-fill me-2 text-danger"></i>Overall Results</h1>
       <p class="text-muted small mb-0">Live vote tally – <strong><?= $totalVotes ?></strong> total votes cast.</p>
     </div>
     <?php if(empty($resultsByPos)): ?>
@@ -422,7 +423,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
               <div style="font-size:0.72rem; color:#6c757d;"><?= htmlspecialchars($r['party_affiliation'] ?? '') ?></div>
             </div>
             <div class="result-bar-wrap">
-              <div class="result-bar" style="width:<?= $barPct ?>%; background-color:<?= $isWin?'#0d6efd':'#dc3545' ?>;"></div>
+              <div class="result-bar" style="width:<?= $barPct ?>%; background-color:<?= $isWin?'#b52232':'#6c757d' ?>;"></div>
             </div>
             <div class="result-count"><strong><?= $votes ?></strong><br><span style="font-size:0.7rem;"><?= $pct ?>%</span></div>
           </div>
@@ -458,11 +459,11 @@ document.querySelectorAll('.cand-card').forEach(card=>{
       document.querySelectorAll(`input[name="${name}"]`).forEach(r=>{
         r.closest('.cand-card').classList.remove('selected');
         r.closest('.cand-card').querySelector('.check-icon')?.classList.replace('bi-check-circle-fill','bi-circle');
-        r.closest('.cand-card').querySelector('.check-icon')?.classList.remove('text-primary');
+        r.closest('.cand-card').querySelector('.check-icon')?.classList.remove('text-danger');
       });
       card.classList.add('selected');
       card.querySelector('.check-icon')?.classList.replace('bi-circle','bi-check-circle-fill');
-      card.querySelector('.check-icon')?.classList.add('text-primary');
+      card.querySelector('.check-icon')?.classList.add('text-danger');
     }
   });
 });
@@ -472,12 +473,12 @@ function confirmVote(){
   const allGroups=new Set([...document.querySelectorAll('.cand-radio')].map(r=>r.name));
   let anySelected=false;
   allGroups.forEach(g=>{if(document.querySelector(`input[name="${g}"]:checked`))anySelected=true;});
-  if(!anySelected){Swal.fire({title:'No Selection',text:'Please select at least one candidate.',icon:'warning',confirmButtonColor:'#0d6efd'});return;}
+  if(!anySelected){Swal.fire({title:'No Selection',text:'Please select at least one candidate.',icon:'warning',confirmButtonColor:'#b52232'});return;}
   Swal.fire({
     title:'Confirm Your Vote',
     text:'Your votes cannot be changed after submission.',
     icon:'question',showCancelButton:true,
-    confirmButtonColor:'#0d6efd',cancelButtonColor:'#6c757d',
+    confirmButtonColor:'#b52232',cancelButtonColor:'#6c757d',
     confirmButtonText:'Yes, submit!'
   }).then(r=>{if(r.isConfirmed)document.getElementById('voteForm').submit();});
 }

@@ -86,6 +86,12 @@ if (isset($_POST['saveCandidate'])) {
         writeLog($conn, "Added Candidate: $name");
         echo "<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire('Added!','Candidate added.','success'));</script>";
     }
+    if ($pos !== '') {
+        $checkPos = $conn->query("SELECT * FROM tbl_position WHERE position_name = '$pos'");
+        if ($checkPos && $checkPos->num_rows == 0) {
+            $conn->query("INSERT INTO tbl_position (position_name, description) VALUES ('$pos', 'Auto-created from candidate')");
+        }
+    }
     $activeSection = 'candidatesSection';
 }
 
@@ -117,7 +123,12 @@ if (isset($_POST['saveElection'])) {
 // ── POSITIONS ───────────────────────────────────────────────
 if (isset($_POST['deletePosition'])) {
     $id = intval($_POST['position_id']);
+    $oldPosQuery = $conn->query("SELECT position_name FROM tbl_position WHERE position_id=$id");
+    $oldPos = ($oldPosQuery && $oldPosQuery->num_rows > 0) ? $oldPosQuery->fetch_assoc()['position_name'] : '';
     $conn->query("DELETE FROM tbl_position WHERE position_id=$id");
+    if ($oldPos !== '') {
+        $conn->query("UPDATE tbl_candidate SET election_position='' WHERE election_position='" . $conn->real_escape_string($oldPos) . "'");
+    }
     writeLog($conn, "Deleted Position #$id");
     echo "<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire('Deleted!','Position removed.','success'));</script>";
     $activeSection = 'positionsSection';
@@ -127,7 +138,12 @@ if (isset($_POST['savePosition'])) {
     $pname = $conn->real_escape_string(trim($_POST['position_name']));
     $pdesc = $conn->real_escape_string(trim($_POST['description']));
     if ($id) {
+        $oldPosQuery = $conn->query("SELECT position_name FROM tbl_position WHERE position_id=$id");
+        $oldPos = ($oldPosQuery && $oldPosQuery->num_rows > 0) ? $oldPosQuery->fetch_assoc()['position_name'] : '';
         $conn->query("UPDATE tbl_position SET position_name='$pname',description='$pdesc' WHERE position_id=$id");
+        if ($oldPos !== '') {
+            $conn->query("UPDATE tbl_candidate SET election_position='$pname' WHERE election_position='" . $conn->real_escape_string($oldPos) . "'");
+        }
         writeLog($conn, "Updated Position #$id");
         echo "<script>document.addEventListener('DOMContentLoaded',()=>Swal.fire('Updated!','Position updated.','success'));</script>";
     } else {
@@ -169,10 +185,10 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
     /* Layout */
     .topbar { position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-height); background-color: #ffffff; border-bottom: 1px solid #dee2e6; display: flex; align-items: center; padding: 0 1.5rem; z-index: 1030; }
     .topbar-brand { font-size: 1.1rem; font-weight: 700; color: #212529; text-decoration: none; }
-    .topbar-brand span { color: #0d6efd; }
+    .topbar-brand span { color: #b52232; }
     .sidebar-toggle { background: none; border: none; cursor: pointer; color: #212529; font-size: 1.4rem; margin-right: 1rem; padding: 4px 8px; border-radius: 4px; }
     .sidebar-toggle:hover { background-color: #e9ecef; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #0d6efd; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background-color: #b52232; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
     
     .sidebar { position: fixed; top: var(--topbar-height); left: 0; bottom: 0; width: var(--sidebar-width); background-color: #212529; z-index: 1020; overflow-y: auto; transition: transform 0.2s ease-in-out; display: flex; flex-direction: column; }
     .sidebar.collapsed { transform: translateX(calc(-1 * var(--sidebar-width))); }
@@ -180,7 +196,7 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
     .sidebar-nav { list-style: none; padding: 0 0.75rem; margin: 0; }
     .sidebar-link { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.8rem; color: #adb5bd; text-decoration: none; border-radius: 4px; font-size: 0.88rem; transition: background-color 0.15s, color 0.15s; }
     .sidebar-link:hover { background-color: #2c3034; color: #ffffff; }
-    .sidebar-link.active { background-color: #0d6efd; color: #ffffff !important; }
+    .sidebar-link.active { background-color: #b52232; color: #ffffff !important; }
     
     .layout-main { margin-top: var(--topbar-height); margin-left: var(--sidebar-width); min-height: calc(100vh - var(--topbar-height)); padding: 2rem; transition: margin-left 0.2s ease-in-out; }
     .layout-main.expanded { margin-left: 0; }
@@ -242,7 +258,7 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
     
     <div class="row g-3 mb-4">
       <div class="col-md-6 col-lg-3">
-        <div class="card bg-primary text-white border-0 rounded-1">
+        <div class="card bg-danger text-white border-0 rounded-1">
           <div class="card-body d-flex align-items-center justify-content-between p-4">
             <div>
               <h6 class="card-subtitle mb-1 text-white-50 small text-uppercase">Total Users</h6>
@@ -275,7 +291,7 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
         </div>
       </div>
       <div class="col-md-6 col-lg-3">
-        <div class="card bg-primary text-white border-0 rounded-1">
+        <div class="card bg-danger text-white border-0 rounded-1">
           <div class="card-body d-flex align-items-center justify-content-between p-4">
             <div>
               <h6 class="card-subtitle mb-1 text-white-50 small text-uppercase">Elections</h6>
@@ -292,11 +308,11 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
         <h5 class="fw-bold mb-1">Quick Access</h5>
         <p class="text-muted small mb-3">Navigate to any section from the sidebar or the shortcuts below.</p>
         <div class="d-flex flex-wrap gap-2">
-          <a href="admin_dashboard.php?section=usersSection" class="btn btn-primary btn-sm">Manage Users</a>
+          <a href="admin_dashboard.php?section=usersSection" class="btn btn-danger btn-sm">Manage Users</a>
           <a href="admin_dashboard.php?section=candidatesSection" class="btn btn-dark btn-sm">Manage Candidates</a>
           <a href="admin_dashboard.php?section=electionsSection" class="btn btn-secondary btn-sm">Manage Elections</a>
           <a href="admin_dashboard.php?section=positionsSection" class="btn btn-outline-secondary btn-sm">Manage Positions</a>
-          <a href="admin_dashboard.php?section=logsSection" class="btn btn-outline-primary btn-sm">View Logs</a>
+          <a href="admin_dashboard.php?section=logsSection" class="btn btn-outline-danger btn-sm">View Logs</a>
         </div>
       </div>
     </div>
@@ -383,7 +399,7 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
                 <td><?= $c['candidate_id'] ?></td>
                 <td><strong><?= htmlspecialchars($c['candidate_name']) ?></strong></td>
                 <td><?= htmlspecialchars($c['party_affiliation'] ?? '-') ?></td>
-                <td><span class="badge bg-primary"><?= htmlspecialchars($c['election_position'] ?? '-') ?></span></td>
+                <td><span class="badge bg-danger"><?= htmlspecialchars($c['election_position'] ?? '-') ?></span></td>
                 <td class="text-nowrap">
                   <button class="btn btn-sm btn-outline-warning me-1" onclick='editCandidate(<?= json_encode($c) ?>)' data-bs-toggle="modal" data-bs-target="#editCandidateModal"><i class="bi bi-pencil-fill"></i></button>
                   <button class="btn btn-sm btn-outline-danger" onclick="confirmDel('dcf<?= $c['candidate_id'] ?>')"><i class="bi bi-trash-fill"></i></button>
@@ -575,7 +591,7 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
   <form method="POST" action="admin_dashboard.php"><div class="modal-body">
     <div class="mb-3"><label class="form-label fw-semibold">Candidate Name</label><input type="text" name="candidate_name" class="form-control" required></div>
     <div class="mb-3"><label class="form-label fw-semibold">Party Affiliation</label><input type="text" name="party_affiliation" class="form-control"></div>
-    <div class="mb-3"><label class="form-label fw-semibold">Position (e.g. President)</label><input type="text" name="election_position" class="form-control" required></div>
+    <div class="mb-3"><label class="form-label fw-semibold">Position (e.g. President)</label><input type="text" name="election_position" class="form-control" list="positionsList" required></div>
   </div>
   <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" name="saveCandidate" class="btn btn-danger"><i class="bi bi-save me-1"></i>Save</button></div>
   </form>
@@ -588,11 +604,22 @@ $initials  = strtoupper(substr($_SESSION['fullname'] ?? 'A', 0, 1));
     <input type="hidden" name="candidate_id" id="ec_id">
     <div class="mb-3"><label class="form-label fw-semibold">Candidate Name</label><input type="text" name="candidate_name" id="ec_name" class="form-control" required></div>
     <div class="mb-3"><label class="form-label fw-semibold">Party Affiliation</label><input type="text" name="party_affiliation" id="ec_party" class="form-control"></div>
-    <div class="mb-3"><label class="form-label fw-semibold">Position</label><input type="text" name="election_position" id="ec_pos" class="form-control" required></div>
+    <div class="mb-3"><label class="form-label fw-semibold">Position</label><input type="text" name="election_position" id="ec_pos" class="form-control" list="positionsList" required></div>
   </div>
   <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="submit" name="saveCandidate" class="btn btn-warning"><i class="bi bi-save me-1"></i>Update</button></div>
   </form>
 </div></div></div>
+
+<datalist id="positionsList">
+  <?php 
+  $datalistRes = $conn->query("SELECT position_name FROM tbl_position ORDER BY position_name");
+  if ($datalistRes) {
+      while ($dlRow = $datalistRes->fetch_assoc()) {
+          echo '<option value="' . htmlspecialchars($dlRow['position_name']) . '">';
+      }
+  }
+  ?>
+</datalist>
 
 <!-- Add Election -->
 <div class="modal fade" id="addElectionModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">

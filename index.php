@@ -205,7 +205,7 @@ if ($result) {
     <div class="hero-section rounded-1">
       <div class="row align-items-center">
         <div class="col-lg-8">
-          <span class="badge bg-danger mb-2 text-uppercase fw-bold" style="letter-spacing: 0.1em;">Official Election Coverage</span>
+          <span class="badge bg-danger mb-2 text-uppercase fw-bold" style="letter-spacing: 0.1em;">Official Election 2026</span>
           <h1 class="display-5 fw-bold mb-3">National General Elections</h1>
           <p class="lead mb-4">Welcome to the central voting and profiles system. Review the registered candidate lists below, study their party affiliations, and click on their profiles to cast your secure ballot.</p>
           <div class="d-flex flex-wrap gap-2">
