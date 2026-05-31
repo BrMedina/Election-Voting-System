@@ -41,6 +41,8 @@
 			</div>
 		</div>
 	</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </body>
 </html>
 
@@ -74,8 +76,7 @@ if(isset($_POST['sub'])) {
         $_SESSION['fullname'] = $fullname;
         $_SESSION['id'] = $id;
 
-        //to check the usertype
-        echo $usertype;
+        // Redirect based on role
 
         if ($usertype == "Voter" || $usertype == "Voters") {
             ?>
@@ -99,14 +100,14 @@ if(isset($_POST['sub'])) {
             <?php
         };
     } else {
-    ?> 
+    ?>
         <script>
             Swal.fire({
-            position: "center",
-            icon: "error",
-            title: "Invalid Account",
-            showConfirmButton: false,
-            timer: 1500
+                icon: 'error',
+                title: 'Login Failed',
+                text: 'Invalid username or password. Please try again.',
+                confirmButtonColor: '#b52232',
+                confirmButtonText: 'Try Again'
             });
         </script>
     <?php

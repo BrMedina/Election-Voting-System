@@ -1,326 +1,293 @@
 <?php
 require_once 'dbelection.php';
+session_start();
 
-$candidates = [];
+// Logout from index
+if (isset($_GET['logout']) && $_GET['logout'] == '1') {
+    session_destroy();
+    header('Location: index.php');
+    exit();
+}
+
+$loggedIn   = isset($_SESSION['user_type']);
+$sessionName = $loggedIn ? ($_SESSION['fullname'] ?? 'User') : '';
+$sessionRole = $loggedIn ? ($_SESSION['user_type'] ?? '') : '';
+$sessionInit = $loggedIn ? strtoupper(substr($sessionName, 0, 1)) : '';
+
+$candidatesByPos = [];
 $dbError = '';
-$imageDir = 'images';
-$imageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+$totalCandidates = 0;
 
-function getCandidateLastNameSlug($fullName)
-{
-	$cleanName = trim(preg_replace('/\s+/', ' ', $fullName));
-	if ($cleanName === '') {
-		return '';
-	}
-	$parts = explode(' ', $cleanName);
-	$lastName = end($parts);
-	return preg_replace('/[^a-z0-9]/', '', strtolower($lastName));
+function getCandidateImage($candidateName) {
+    $dir = 'images/';
+    if (!is_dir($dir)) return null;
+    $files = @scandir($dir);
+    if (!$files) return null;
+    $normalizedName = strtolower(trim($candidateName));
+    $parts = preg_split('/[\s,\.]+/', $normalizedName);
+    
+    foreach ($files as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $fileInfo = pathinfo($file);
+        $fileName = strtolower($fileInfo['filename']);
+        if (in_array($fileName, $parts) || strpos($normalizedName, $fileName) !== false) {
+            return $dir . $file;
+        }
+    }
+    
+    // Fallback to original last name slug logic
+    $cleanName = trim(preg_replace('/\s+/', ' ', $candidateName));
+    if ($cleanName !== '') {
+        $parts = explode(' ', $cleanName);
+        $lastName = end($parts);
+        $slug = preg_replace('/[^a-z0-9]/', '', strtolower($lastName));
+        $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+        foreach ($extensions as $ext) {
+            $path = $dir . $slug . '.' . $ext;
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+    }
+    
+    return null;
 }
 
-function getCandidateInitials($fullName)
-{
-	$cleanName = trim(preg_replace('/\s+/', ' ', $fullName));
-	if ($cleanName === '') {
-		return '?';
-	}
-	$parts = explode(' ', $cleanName);
-	$first = strtoupper(substr($parts[0], 0, 1));
-	$last = count($parts) > 1 ? strtoupper(substr(end($parts), 0, 1)) : '';
-	return $first . $last;
+function getPartyColor($party) {
+    $map = [
+        'Building Leadership & Momentum'           => ['bg' => '#1D4ED8', 'label' => 'BLM'],
+        'Celestial ng Pagbabago'                    => ['bg' => '#15803D', 'label' => 'CNP'],
+        'Montoya Independent Leadership & Freedom'  => ['bg' => '#B45309', 'label' => 'MILF'],
+    ];
+    $key = trim($party);
+    return isset($map[$key]) ? $map[$key] : ['bg' => '#6B7280', 'label' => 'IND'];
 }
 
-function getCandidatePhotoPath($candidateName, $imageDir, $extensions)
-{
-	$slug = getCandidateLastNameSlug($candidateName);
-	if ($slug === '') {
-		return null;
-	}
-	foreach ($extensions as $ext) {
-		$path = $imageDir . '/' . $slug . '.' . $ext;
-		if (file_exists($path)) {
-			return $path;
-		}
-	}
-	return null;
-}
-
-$query = "SELECT candidate_id, candidate_name, party_affiliation, election_position FROM tbl_candidate";
+$query = "SELECT candidate_id, candidate_name, party_affiliation, election_position FROM tbl_candidate ORDER BY election_position, candidate_name";
 $result = $conn->query($query);
 
 if ($result) {
-	while ($row = $result->fetch_assoc()) {
-		$candidates[] = $row;
-	}
+    while ($row = $result->fetch_assoc()) {
+        $pos = $row['election_position'] ?? 'Other';
+        $candidatesByPos[$pos][] = $row;
+        $totalCandidates++;
+    }
 } else {
-	$dbError = $conn->error;
+    $dbError = $conn->error;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-	<title>Election Voting System</title>
-	<style>
-		:root {
-			--brand: #b52232;
-			--ink: #393939;
-			--paper: #f6f5f3;
-			--midnight: #1f2430;
-			--slate: #5b667a;
-		}
-
-		body {
-			background: var(--paper);
-			color: var(--ink);
-			font-family: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
-		}
-
-		.brand-accent {
-			color: var(--brand);
-		}
-
-		h1, h2, h3, .navbar-brand {
-			font-family: "Poppins", "Segoe UI", system-ui, -apple-system, sans-serif;
-			letter-spacing: 0.02em;
-		}
-
-		.candidate-card {
-			background: #ffffff;
-			border: 1px solid rgba(0, 0, 0, 0.06);
-			border-radius: 18px;
-			box-shadow: 0 10px 24px rgba(23, 28, 40, 0.08);
-			overflow: hidden;
-			height: 100%;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.candidate-image {
-			position: relative;
-			background: linear-gradient(180deg, rgba(31, 36, 48, 0.15), rgba(31, 36, 48, 0));
-			padding: 10px;
-		}
-
-		.candidate-image-frame {
-			border-radius: 14px;
-			overflow: hidden;
-			background: #e9edf4;
-			aspect-ratio: 4 / 5;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.candidate-image-frame img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-
-		.candidate-fallback {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 2.4rem;
-			font-weight: 700;
-			color: #ffffff;
-			background: linear-gradient(135deg, var(--midnight), #3b465f);
-		}
-
-		.candidate-ribbon {
-			position: absolute;
-			left: 16px;
-			bottom: 12px;
-			background: var(--brand);
-			color: #ffffff;
-			padding: 4px 10px;
-			border-radius: 999px;
-			font-size: 0.75rem;
-			font-weight: 600;
-			letter-spacing: 0.04em;
-			text-transform: uppercase;
-		}
-
-		.candidate-body {
-			padding: 14px 16px 18px;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-		}
-
-		.candidate-name {
-			font-size: 1rem;
-			font-weight: 700;
-			margin: 0;
-			color: var(--midnight);
-		}
-
-		.candidate-meta {
-			font-size: 0.82rem;
-			color: var(--slate);
-			letter-spacing: 0.02em;
-			text-transform: uppercase;
-		}
-
-		.candidate-details {
-			font-size: 0.9rem;
-			color: var(--ink);
-		}
-
-		.candidate-details span {
-			font-weight: 600;
-		}
-	</style>
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Election Portal – National Voting System</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+  <style>
+    :root {
+      --brand-red: #b52232;
+      --brand-gray: #6c757d;
+      --brand-dark: #212529;
+      --brand-light: #f8f9fa;
+    }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--brand-light);
+      color: #212529;
+    }
+    .topbar {
+      border-bottom: 3px solid var(--brand-red);
+    }
+    .navbar-brand span {
+      color: var(--brand-red);
+      font-weight: 700;
+    }
+    .hero-section {
+      background-color: var(--brand-dark);
+      color: #ffffff;
+      border-left: 8px solid var(--brand-red);
+      padding: 3.5rem 2rem;
+      margin-bottom: 2rem;
+    }
+    .section-title {
+      font-weight: 700;
+      border-bottom: 2px solid var(--brand-red);
+      padding-bottom: 0.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--brand-dark);
+      text-transform: uppercase;
+      font-size: 1.25rem;
+      letter-spacing: 0.05em;
+    }
+    .candidate-row-card {
+      background-color: #ffffff;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      transition: border-color 0.15s;
+    }
+    .candidate-row-card:hover {
+      border-color: var(--brand-red);
+    }
+    .cand-photo-frame {
+      width: 120px;
+      height: 120px;
+      background-color: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      border-radius: 4px;
+      border: 1px solid #dee2e6;
+    }
+    .cand-photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .cand-avatar-fallback {
+      width: 100%;
+      height: 100%;
+      background-color: var(--brand-gray);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 2rem;
+    }
+  </style>
 </head>
 <body>
-	<nav class="navbar navbar-expand-lg bg-white border-bottom">
-		<div class="container">
-			<a class="navbar-brand fw-semibold" href="#main">Election Voting System</a>
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
-			<div class="collapse navbar-collapse" id="mainNav">
-				<ul class="navbar-nav ms-auto">
-					<li class="nav-item">
-						<a class="nav-link" href="votingforms.php">Vote Now!</a>
-					</li>
-				</ul>
-			</div>
-		</div>
-	</nav>
 
-	<section id="main" class="py-5">
-		<div class="container">
-			<div class="row align-items-center">
-				<div class="col-lg-7">
-					<h1 class="display-6 fw-semibold">Main page</h1>
-					<p class="lead">Welcome to the Election Voting System. Review candidates and stay informed before casting your vote.</p>
-					<p class="text-muted mb-0">Use the navigation to jump to the candidate list.</p>
-				</div>
-				<div class="col-lg-5">
-					<div class="p-4 bg-white border rounded-4 shadow-sm">
-						<h2 class="h5 mb-2">Quick actions</h2>
-						<ul class="list-unstyled mb-0">
-							<li class="mb-2">Browse candidates</li>
-							<li class="mb-2">Check party affiliations</li>
-							<li class="mb-0">Review positions</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-white topbar shadow-sm">
+    <div class="container">
+      <a class="navbar-brand fw-bold fs-4" href="index.php">Election <span>Portal</span></a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <?php if ($loggedIn): ?>
+          <!-- Vote Now / Dashboard CTA -->
+          <?php if ($sessionRole === 'Voters' || $sessionRole === 'Voter'): ?>
+            <a class="btn btn-danger text-white px-4 fw-bold" href="voter_dashboard.php"><i class="bi bi-check-square me-2"></i>Vote Now!</a>
+          <?php elseif ($sessionRole === 'Admin'): ?>
+            <a class="btn btn-outline-secondary btn-sm" href="admin_dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+          <?php elseif ($sessionRole === 'Organizer'): ?>
+            <a class="btn btn-outline-secondary btn-sm" href="organizer_dashboard.php"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+          <?php endif; ?>
+          <!-- Account dropdown -->
+          <div class="dropdown">
+            <button class="btn p-0 border-0 bg-transparent d-flex align-items-center gap-2" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="cursor:pointer;">
+              <div style="width:34px; height:34px; border-radius:50%; background-color:#b52232; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.88rem; flex-shrink:0;"><?= htmlspecialchars($sessionInit) ?></div>
+              <div class="d-none d-sm-block text-start" style="line-height:1.2;">
+                <div style="font-size:0.85rem; font-weight:600; color:#212529;"><?= htmlspecialchars($sessionName) ?></div>
+                <div style="font-size:0.72rem; color:#6c757d;"><?= htmlspecialchars($sessionRole) ?></div>
+              </div>
+              <i class="bi bi-chevron-down text-muted" style="font-size:0.75rem;"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border" style="min-width:180px; font-size:0.88rem;">
+              <li><span class="dropdown-item-text text-muted" style="font-size:0.75rem; padding:0.4rem 1rem 0.2rem;">Signed in as</span></li>
+              <li><span class="dropdown-item-text fw-semibold" style="padding:0 1rem 0.5rem; font-size:0.88rem; color:#212529;"><?= htmlspecialchars($sessionName) ?></span></li>
+              <li><hr class="dropdown-divider my-1"></li>
+              <li><a class="dropdown-item text-danger" href="index.php?logout=1"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        <?php else: ?>
+          <!-- Not logged in -->
+          <a class="btn btn-danger text-white px-4 fw-bold" href="voter_dashboard.php"><i class="bi bi-check-square me-2"></i>Vote Now!</a>
+          <a class="btn btn-outline-secondary btn-sm" href="login.php"><i class="bi bi-shield-lock me-1"></i>Login</a>
+        <?php endif; ?>
+      </div>
+    </div>
+  </nav>
 
-	<section id="candidates" class="py-5 bg-white border-top">
-		<div class="container">
-			<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-				<div>
-					<h2 class="h4 mb-1">Candidate Information</h2>
-					<p class="text-muted mb-0">List of registered candidates.</p>
-				</div>
-				<div class="btn-group" role="group" aria-label="Candidate views">
-					<button type="button" class="btn btn-outline-secondary candidate-filter active" data-target="candidate-table" aria-pressed="true">Candidate Information</button>
-					<button type="button" class="btn btn-outline-secondary candidate-filter" data-target="party-list">Party Lists</button>
-				</div>
-			</div>
+  <!-- HERO SECTION -->
+  <div class="container mt-4">
+    <div class="hero-section rounded-1">
+      <div class="row align-items-center">
+        <div class="col-lg-8">
+          <span class="badge bg-danger mb-2 text-uppercase fw-bold" style="letter-spacing: 0.1em;">Official Election Coverage</span>
+          <h1 class="display-5 fw-bold mb-3">National General Elections</h1>
+          <p class="lead mb-4">Welcome to the central voting and profiles system. Review the registered candidate lists below, study their party affiliations, and click on their profiles to cast your secure ballot.</p>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="voter_dashboard.php?section=voteSection" class="btn btn-danger btn-lg px-4 fw-bold"><i class="bi bi-check-circle me-2"></i>Access Voting Ballot</a>
+            <a href="login.php" class="btn btn-outline-light btn-lg px-4"><i class="bi bi-shield-lock me-2"></i>Admin/Organizer Login</a>
+          </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block">
+          <div class="p-4 bg-white bg-opacity-10 rounded border border-white border-opacity-25">
+            <h5 class="fw-bold mb-3 text-white"><i class="bi bi-info-circle-fill me-2 text-danger"></i>Election Guidelines</h5>
+            <ul class="list-unstyled mb-0 text-white-50 small" style="line-height: 1.6;">
+              <li class="mb-2"><i class="bi bi-chevron-right me-1 text-danger"></i> Review candidates grouped by position.</li>
+              <li class="mb-2"><i class="bi bi-chevron-right me-1 text-danger"></i> Voters are permitted 1 vote per position.</li>
+              <li class="mb-2"><i class="bi bi-chevron-right me-1 text-danger"></i> Cast ballots cannot be modified after submission.</li>
+              <li class="mb-0"><i class="bi bi-chevron-right me-1 text-danger"></i> Live tallies are public under results.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-			<?php if ($dbError): ?>
-				<div class="alert alert-danger" role="alert">
-					Unable to load candidates: <?php echo htmlspecialchars($dbError); ?>
-				</div>
-			<?php elseif (count($candidates) === 0): ?>
-				<div class="alert alert-secondary" role="alert">
-					No candidates found.
-				</div>
-			<?php else: ?>
-				<div id="party-list" class="candidate-view d-none">
-					<div class="row g-3">
-						<?php
-						$partyGroups = [];
-						foreach ($candidates as $candidate) {
-							$party = trim($candidate['party_affiliation'] ?? '');
-							if ($party !== '') {
-								$partyGroups[$party] = true;
-							}
-						}
-						foreach (array_keys($partyGroups) as $partyName):
-						?>
-							<div class="col-sm-6 col-lg-4 col-xl-3">
-								<div class="p-3 border rounded-4 h-100 bg-light-subtle">
-									<h3 class="h6 mb-1"><?php echo htmlspecialchars($partyName); ?></h3>
-									<p class="text-muted small mb-0">Party list</p>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
 
-				<div id="candidate-table" class="candidate-view">
-					<div class="row g-3">
-						<?php foreach ($candidates as $candidate): ?>
-							<?php
-							$photoPath = getCandidatePhotoPath($candidate['candidate_name'], $imageDir, $imageExtensions);
-							$initials = getCandidateInitials($candidate['candidate_name']);
-							$positionLabel = trim((string) $candidate['election_position']) !== ''
-								? 'Position ' . $candidate['election_position']
-								: 'Candidate';
-							?>
-							<div class="col-sm-6 col-lg-4 col-xl-3">
-								<div class="candidate-card">
-									<div class="candidate-image">
-										<div class="candidate-image-frame">
-											<?php if ($photoPath): ?>
-												<img src="<?php echo htmlspecialchars($photoPath); ?>" alt="Photo of <?php echo htmlspecialchars($candidate['candidate_name']); ?>">
-											<?php else: ?>
-												<div class="candidate-fallback"><?php echo htmlspecialchars($initials); ?></div>
-											<?php endif; ?>
-										</div>
-										<span class="candidate-ribbon"><?php echo htmlspecialchars($positionLabel); ?></span>
-									</div>
-									<div class="candidate-body">
-										<h3 class="candidate-name"><?php echo htmlspecialchars($candidate['candidate_name']); ?></h3>
-										<div class="candidate-meta"><?php echo htmlspecialchars($candidate['party_affiliation']); ?></div>
-										<div class="candidate-details">
-											<div><span>ID:</span> <?php echo htmlspecialchars($candidate['candidate_id']); ?></div>
-											<div><span>Position:</span> <?php echo htmlspecialchars($candidate['election_position']); ?></div>
-										</div>
-									</div>
-								</div>
-							</div>
-						<?php endforeach; ?>
-					</div>
-				</div>
-			<?php endif; ?>
-		</div>
-	</section>
+  <!-- CANDIDATE BALLOT LISTING -->
+  <div class="container mb-5">
+    <h2 class="section-title">Official Ballot Candidates (<?= $totalCandidates ?> Registered)</h2>
+    
+    <?php if ($dbError): ?>
+      <div class="alert alert-danger" role="alert">
+        Unable to load ballot: <?= htmlspecialchars($dbError) ?>
+      </div>
+    <?php elseif (empty($candidatesByPos)): ?>
+      <div class="alert alert-secondary text-center py-5" role="alert">
+        <i class="bi bi-inbox fs-2 d-block mb-3"></i>
+        No registered candidates found on the ballot yet.
+      </div>
+    <?php else: foreach ($candidatesByPos as $pos => $cands): ?>
+      
+      <div class="mb-4">
+        <h4 class="fw-bold mb-3 text-dark border-start border-4 border-danger ps-2" style="font-size: 1.15rem;"><?= htmlspecialchars($pos) ?> Candidates</h4>
+        <div class="row g-3">
+          <?php foreach ($cands as $c): 
+            $photoPath = getCandidateImage($c['candidate_name']);
+            $init = strtoupper(substr($c['candidate_name'], 0, 1));
+          ?>
+            <div class="col-12">
+              <div class="candidate-row-card p-3 shadow-sm">
+                <div class="row align-items-center g-3">
+                  <!-- Image box -->
+                  <div class="col-auto">
+                    <div class="cand-photo-frame">
+                      <?php if ($photoPath): ?>
+                        <img src="<?= htmlspecialchars($photoPath) ?>" alt="Photo of <?= htmlspecialchars($c['candidate_name']) ?>">
+                      <?php else: ?>
+                        <div class="cand-avatar-fallback"><?= $init ?></div>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                  <!-- Content Box -->
+                  <div class="col">
+                    <span class="badge bg-danger text-uppercase mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;"><?= htmlspecialchars($pos) ?></span>
+                    <h5 class="fw-bold mb-1 text-dark"><?= htmlspecialchars($c['candidate_name']) ?></h5>
+                    <?php $pc = getPartyColor($c['party_affiliation'] ?? 'Independent'); ?>
+                    <p class="text-secondary mb-0 small">
+                      <span style="display:inline-block; background-color:<?= htmlspecialchars($pc['bg']) ?>; color:#fff; font-size:0.68rem; font-weight:700; letter-spacing:0.06em; padding:2px 8px; border-radius:3px; text-transform:uppercase; margin-right:6px;"><?= htmlspecialchars($pc['label']) ?></span><?= htmlspecialchars($c['party_affiliation'] ?? 'Independent') ?>
+                    </p>
+                    <div class="text-muted mt-2 small">Candidate ID: <strong>#<?= htmlspecialchars($c['candidate_id']) ?></strong></div>
+                  </div>
+                  <!-- Action Box -->
+                  <div class="col-md-auto text-md-end">
+                    <a href="voter_dashboard.php?section=voteSection" class="btn btn-outline-danger fw-bold px-4 py-2"><i class="bi bi-check-circle me-2"></i>Vote for Candidate</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      </div>
+      
+    <?php endforeach; endif; ?>
+  </div>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-	<script>
-		const filterButtons = document.querySelectorAll('.candidate-filter');
-		const candidateViews = document.querySelectorAll('.candidate-view');
-
-		const showCandidateView = (targetId) => {
-			candidateViews.forEach((view) => {
-				view.classList.toggle('d-none', view.id !== targetId);
-			});
-			filterButtons.forEach((button) => {
-				const isActive = button.dataset.target === targetId;
-				button.classList.toggle('active', isActive);
-				button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-			});
-		};
-
-		filterButtons.forEach((button) => {
-			button.addEventListener('click', () => showCandidateView(button.dataset.target));
-		});
-	</script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
