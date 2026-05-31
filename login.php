@@ -74,14 +74,33 @@ if(isset($_POST['sub'])) {
         //session variable
         $_SESSION['user_type'] = $usertype;
         $_SESSION['fullname'] = $fullname;
-        $_SESSION['id'] = $id;
+        $_SESSION['account_id'] = $id;
 
         // Redirect based on role
 
         if ($usertype == "Voter" || $usertype == "Voters") {
+            $voterName = $conn->real_escape_string($fullname);
+            $voterPhone = isset($fieldname['phone']) ? trim((string)$fieldname['phone']) : '';
+            $voterDob = isset($fieldname['date_of_birth']) ? $conn->real_escape_string($fieldname['date_of_birth']) : '';
+            $voterGender = isset($fieldname['gender']) ? $conn->real_escape_string($fieldname['gender']) : '';
+
+            $voterQuery = "SELECT voter_id FROM tbl_voter WHERE voter_name = '$voterName' AND contact_information = '" . $conn->real_escape_string($voterPhone) . "' LIMIT 1";
+            $voterResult = $conn->query($voterQuery);
+
+            if ($voterResult && $voterResult->num_rows === 1) {
+                $voterRow = $voterResult->fetch_assoc();
+                $_SESSION['id'] = (int)$voterRow['voter_id'];
+            } else {
+                $insertVoterQuery = "INSERT INTO tbl_voter (voter_name, date_of_birth, gender, contact_information) VALUES ('" . $voterName . "', '" . $voterDob . "', '" . $voterGender . "', '" . $conn->real_escape_string($voterPhone) . "')";
+                if ($conn->query($insertVoterQuery)) {
+                    $_SESSION['id'] = (int)$conn->insert_id;
+                } else {
+                    $_SESSION['id'] = $id;
+                }
+            }
             ?>
             <script>
-                window.location.href = "voter_dashboard.php";
+                window.location.href = "index.php";
             </script>
             <?php
         }

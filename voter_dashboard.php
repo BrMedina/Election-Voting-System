@@ -21,9 +21,61 @@ if (isset($_GET['logout']) && $_GET['logout'] == '1') {
     exit();
 }
 
+function resolveVoterId($conn, $sessionUserId, $sessionFullName, $accountId = 0) {
+  if ($sessionUserId > 0) {
+    $checkVoter = $conn->query("SELECT voter_id FROM tbl_voter WHERE voter_id = " . $sessionUserId . " LIMIT 1");
+    if ($checkVoter && $checkVoter->num_rows === 1) {
+      return $sessionUserId;
+    }
+  }
+
+  $userRow = null;
+  if ($accountId > 0) {
+    $userLookup = $conn->query("SELECT user_id, full_name, phone, date_of_birth, gender FROM tbl_users WHERE user_id = " . $accountId . " LIMIT 1");
+    if ($userLookup && $userLookup->num_rows === 1) {
+      $userRow = $userLookup->fetch_assoc();
+      $_SESSION['account_id'] = (int)$userRow['user_id'];
+    }
+  } elseif (!empty($sessionFullName)) {
+    $escapedFullName = $conn->real_escape_string($sessionFullName);
+    $userLookup = $conn->query("SELECT user_id, full_name, phone, date_of_birth, gender FROM tbl_users WHERE full_name = '" . $escapedFullName . "' LIMIT 1");
+    if ($userLookup && $userLookup->num_rows === 1) {
+      $userRow = $userLookup->fetch_assoc();
+      $_SESSION['account_id'] = (int)$userRow['user_id'];
+    }
+  }
+
+  if ($userRow) {
+    $lookupName = $conn->real_escape_string($userRow['full_name']);
+    $lookupPhone = $conn->real_escape_string(trim((string)($userRow['phone'] ?? '')));
+    $lookupDob = $conn->real_escape_string((string)($userRow['date_of_birth'] ?? ''));
+    $lookupGender = $conn->real_escape_string((string)($userRow['gender'] ?? ''));
+
+    $voterLookup = $conn->query("SELECT voter_id FROM tbl_voter WHERE voter_name = '" . $lookupName . "' AND contact_information = '" . $lookupPhone . "' LIMIT 1");
+    if ($voterLookup && $voterLookup->num_rows === 1) {
+      $voterRow = $voterLookup->fetch_assoc();
+      return (int)$voterRow['voter_id'];
+    }
+
+    $insertVoter = "INSERT INTO tbl_voter (voter_name, date_of_birth, gender, contact_information) VALUES ('" . $lookupName . "', '" . $lookupDob . "', '" . $lookupGender . "', '" . $lookupPhone . "')";
+    if ($conn->query($insertVoter)) {
+      return (int)$conn->insert_id;
+    }
+  }
+
+  return 0;
+}
+
 // Set up basic variables for the logged-in voter
-$userId    = intval($_SESSION['id'] ?? 0);
+$accountId = intval($_SESSION['account_id'] ?? 0);
 $fullName  = $_SESSION['fullname'] ?? 'Voter';
+$userId    = resolveVoterId($conn, intval($_SESSION['id'] ?? 0), $fullName, $accountId);
+
+if ($userId <= 0) {
+  session_destroy();
+  header('Location: login.php');
+  exit();
+}
 
 // Get the voter's first name by splitting the full name by space
 $nameParts = explode(' ', $fullName);

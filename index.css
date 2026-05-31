@@ -1,0 +1,165 @@
+:root {
+    --brand-red: #b52232;
+    --brand-gray: #6c757d;
+    --brand-dark: #212529;
+    --brand-light: #f8f9fa;
+}
+
+body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--brand-light);
+    color: #212529;
+}
+
+.topbar {
+    border-bottom: 3px solid var(--brand-red);
+}
+
+.navbar-brand span {
+    color: var(--brand-red);
+    font-weight: 700;
+}
+
+/* User profile button and avatar styles */
+.user-profile-btn {
+    cursor: pointer;
+}
+
+.user-profile-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #b52232;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.88rem;
+    flex-shrink: 0;
+}
+
+.user-profile-info {
+    line-height: 1.2;
+}
+
+.user-profile-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #212529;
+}
+
+.user-profile-role {
+    font-size: 0.72rem;
+    color: #6c757d;
+}
+
+.user-profile-chevron {
+    font-size: 0.75rem;
+}
+
+.user-dropdown-menu {
+    min-width: 180px;
+    font-size: 0.88rem;
+}
+
+.user-dropdown-label {
+    font-size: 0.75rem;
+    padding: 0.4rem 1rem 0.2rem;
+}
+
+.user-dropdown-name {
+    padding: 0 1rem 0.5rem;
+    font-size: 0.88rem;
+    color: #212529;
+}
+
+/* Hero Section */
+.hero-section {
+    background-color: var(--brand-dark);
+    color: #ffffff;
+    border-left: 8px solid var(--brand-red);
+    padding: 3.5rem 2rem;
+    margin-bottom: 2rem;
+}
+
+.hero-badge {
+    letter-spacing: 0.1em;
+}
+
+.hero-guidelines-list {
+    line-height: 1.6;
+}
+
+/* Candidates Ballot section styling */
+.section-title {
+    font-weight: 700;
+    border-bottom: 2px solid var(--brand-red);
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--brand-dark);
+    text-transform: uppercase;
+    font-size: 1.25rem;
+    letter-spacing: 0.05em;
+}
+
+.position-header {
+    font-size: 1.15rem;
+}
+
+.candidate-row-card {
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+}
+
+.candidate-row-card:hover {
+    border-color: var(--brand-red);
+}
+
+.cand-photo-frame {
+    width: 120px;
+    height: 120px;
+    background-color: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.cand-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cand-avatar-fallback {
+    width: 100%;
+    height: 100%;
+    background-color: var(--brand-gray);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 2rem;
+}
+
+.candidate-badge {
+    font-size: 0.7rem;
+    letter-spacing: 0.05em;
+}
+
+.party-badge {
+    display: inline-block;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    margin-right: 6px;
+}

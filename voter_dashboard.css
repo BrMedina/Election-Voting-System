@@ -9,7 +9,6 @@ body {
     color: #212529;
 }
 
-/* Layout */
 .topbar {
     position: fixed;
     top: 0;
@@ -82,7 +81,6 @@ body {
     background-color: #212529;
     z-index: 1020;
     overflow-y: auto;
-    transition: transform 0.2s ease-in-out;
     display: flex;
     flex-direction: column;
 }
@@ -115,7 +113,6 @@ body {
     text-decoration: none;
     border-radius: 4px;
     font-size: 0.88rem;
-    transition: background-color 0.15s, color 0.15s;
 }
 
 .sidebar-link:hover {
@@ -137,20 +134,17 @@ body {
     margin-left: var(--sidebar-width);
     min-height: calc(100vh - var(--topbar-height));
     padding: 2rem;
-    transition: margin-left 0.2s ease-in-out;
 }
 
 .layout-main.expanded {
     margin-left: 0;
 }
 
-/* Candidate card */
 .cand-card {
     border: 2px solid #dee2e6;
     border-radius: 6px;
     padding: 1rem 1.25rem;
     cursor: pointer;
-    transition: all 0.15s;
     display: flex;
     align-items: center;
     gap: 1rem;
@@ -226,7 +220,6 @@ body {
     margin-right: 5px;
 }
 
-/* Position section */
 .pos-section {
     border-radius: 6px;
     border: 1px solid #dee2e6;
@@ -245,7 +238,6 @@ body {
     margin-bottom: 1rem;
 }
 
-/* Results */
 .result-bar-wrap {
     background: #e9ecef;
     border-radius: 4px;
@@ -258,7 +250,6 @@ body {
     background: #b52232;
     height: 100%;
     border-radius: 4px;
-    transition: width 0.8s ease;
 }
 
 .result-row {
@@ -290,7 +281,6 @@ body {
     font-size: 0.7rem;
 }
 
-/* Vote summary */
 .my-vote-item {
     display: flex;
     align-items: center;
