@@ -80,21 +80,21 @@ if(isset($_POST['sub'])) {
         if ($usertype == "Voter" || $usertype == "Voters") {
             ?>
             <script>
-                window.location.href = "index.php";
+                window.location.href = "voter_dashboard.php";
             </script>
             <?php
         }
         else if($usertype == "Organizer"){
             ?>
             <script>
-                window.location.href = "index.php";
+                window.location.href = "organizer_dashboard.php";
             </script>
             <?php
         }
         else if ($usertype == "Admin") {
             ?>
             <script>
-                window.location.href = "admin.php";
+                window.location.href = "admin_dashboard.php";
             </script>
             <?php
         };

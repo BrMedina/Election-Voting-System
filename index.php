@@ -190,10 +190,7 @@ if ($result) {
 			<div class="collapse navbar-collapse" id="mainNav">
 				<ul class="navbar-nav ms-auto">
 					<li class="nav-item">
-						<a class="nav-link" href="#main">Main page</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#candidates">Candidate information</a>
+						<a class="nav-link" href="votingforms.php">Vote Now!</a>
 					</li>
 				</ul>
 			</div>
