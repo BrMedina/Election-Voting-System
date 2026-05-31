@@ -251,7 +251,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     <?php else: foreach($candidatesByPos as $pos => $cands): ?>
       <div class="card border-light shadow-sm mb-3">
         <div class="card-body p-4">
-          <h5 class="fw-bold mb-3"><i class="bi bi-award-fill text-danger me-2"></i><?= htmlspecialchars($pos) ?></h5>
+          <h5 class="fw-bold mb-3"><?= htmlspecialchars($pos) ?></h5>
           <div class="row g-3">
             <?php foreach($cands as $c): 
               $init = strtoupper(substr($c['candidate_name'],0,1));
@@ -301,7 +301,6 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
       ?>
       <div class="pos-section <?= $alreadyVoted ? 'border-success' : '' ?>">
         <div class="pos-title">
-          <i class="bi bi-award-fill text-danger"></i>
           <?= htmlspecialchars($pos) ?>
           <?php if($alreadyVoted): ?>
             <span class="badge bg-success ms-auto"><i class="bi bi-check-circle me-1"></i>Voted: <?= htmlspecialchars($myChoice ?? '') ?></span>
@@ -357,7 +356,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
     <div class="card border-light shadow-sm">
       <div class="card-body p-4">
         <div class="mb-4">
-          <h5 class="fw-bold mb-1"><i class="bi bi-card-checklist me-2 text-danger"></i>My Vote Summary</h5>
+          <h5 class="fw-bold mb-1"></i>My Vote Summary</h5>
           <p class="text-muted small mb-0">A record of all votes you have cast.</p>
         </div>
         <?php if($myVotesRes && $myVotesRes->num_rows > 0): ?>
@@ -401,7 +400,7 @@ $alreadyVotedAll = count($myVotedPositions) >= count($candidatesByPos);
   <!-- OVERALL RESULTS -->
   <div id="resultsSection" <?= $activeSection!=='resultsSection'?'style="display:none"':'' ?>>
     <div class="mb-3">
-      <h1 class="h4 fw-bold"><i class="bi bi-bar-chart-fill me-2 text-danger"></i>Overall Results</h1>
+      <h1 class="h4 fw-bold"></i>Overall Results</h1>
       <p class="text-muted small mb-0">Live vote tally – <strong><?= $totalVotes ?></strong> total votes cast.</p>
     </div>
     <?php if(empty($resultsByPos)): ?>
